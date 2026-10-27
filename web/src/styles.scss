@@ -1,0 +1,50 @@
+// LucidKit design tokens — sets the --ui-* CSS custom properties that every
+// @theredhead/lucid-kit component (including lucid-forms field controls) consumes.
+@use '@theredhead/lucid-theme/styles' as theme;
+@include theme.theredhead-theme();
+
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color: #1a1a2e; background: #f5f6fa; }
+a { color: #2563eb; text-decoration: none; }
+header.appbar { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; align-items: center; gap: 18px; }
+header.appbar .brand { font-weight: 700; font-size: 18px; }
+header.appbar nav a { color: #cbd5e1; margin-right: 16px; }
+main { padding: 24px; max-width: 1100px; margin: 0 auto; }
+.card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+h1 { font-size: 22px; margin: 0 0 6px; }
+.sub { color: #6b7280; margin: 0 0 18px; font-size: 14px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid #eef0f3; }
+th { color: #6b7280; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: .04em; }
+.badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #eef2ff; color: #3730a3; }
+.badge.online { background: #dcfce7; color: #166534; }
+.badge.offline, .badge.error { background: #fee2e2; color: #991b1b; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+label { display: block; font-size: 13px; font-weight: 600; margin: 14px 0 5px; color: #374151; }
+input[type=text], input[type=checkbox] { width: 100%; padding: 9px 11px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+input[type=checkbox]{ width:auto; }
+.row { display: flex; gap: 12px; align-items: center; }
+button { cursor: pointer; border: none; border-radius: 8px; padding: 9px 16px; font-size: 14px; font-weight: 600; }
+button.primary { background: #2563eb; color: #fff; }
+button.ghost { background: #eef2ff; color: #3730a3; }
+button.danger { background: #dc2626; color: #fff; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.actions { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
+pre { background: #0f172a; color: #e2e8f0; padding: 14px; border-radius: 8px; overflow: auto; font-size: 12.5px; max-height: 360px; }
+.op { padding: 6px 10px; border-radius: 6px; margin: 4px 0; font-size: 13px; font-family: ui-monospace, monospace; }
+.op.add { background: #dcfce7; color: #166534; }
+.op.update { background: #fef9c3; color: #854d0e; }
+.op.remove, .op.prune { background: #fee2e2; color: #991b1b; }
+.hint { font-size: 12px; color: #6b7280; margin-top: 4px; }
+.err { color: #b91c1c; font-size: 13px; margin-top: 10px; white-space: pre-wrap; }
+
+/* page + operation helpers */
+.page-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+.page-head .sub { margin: 0; }
+.banner { padding: 10px 14px; border-radius: 8px; margin-top: 14px; font-size: 13.5px; background: #eef2ff; color: #3730a3; }
+.banner.ok { background: #dcfce7; color: #166534; }
+.banner.err { background: #fee2e2; color: #991b1b; white-space: pre-wrap; }
+.menu-block { margin-top: 14px; }
+.menu-name { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: #374151; margin-bottom: 6px; }
+.op.none { background: #f3f4f6; color: #6b7280; }
