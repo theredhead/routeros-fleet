@@ -1,0 +1,28 @@
+<div class="reorder-help"><app-help-popover label="Reordering communication methods" text="Drag a method by its grip to change the attempt order. With the grip focused, use Up or Down to move one position, or Home and End to move to the beginning or end." /></div>
+<ol cdkDropList [cdkDropListDisabled]="disabled()" (cdkDropListDropped)="drop($event.previousIndex, $event.currentIndex)">
+  @for (row of rows(); track row.id; let position = $index) {
+    <li cdkDrag cdkDragLockAxis="y" [cdkDragDisabled]="disabled()">
+      <div class="method-controls">
+        <button type="button" cdkDragHandle class="drag-handle" [disabled]="disabled()"
+          [attr.aria-label]="'Reorder ' + row.label"
+          uiTooltip="Drag to reorder" (keydown)="moveWithKeyboard($event, position)">
+          <ui-icon [svg]="grip" [size]="16" aria-hidden="true" />
+        </button>
+        <span class="method-name"><ui-checkbox [checked]="row.enabled" [disabled]="disabled()" [ariaLabel]="'Enable ' + row.label" (checkedChange)="methodChange.emit({id: row.id, changes: {enabled: $event}})">{{ position + 1 }}. {{ row.label }}</ui-checkbox></span>
+        <span class="method-port">Port <ui-input type="number" [value]="'' + row.port" [disabled]="disabled()" [ariaLabel]="row.label + ' port'" (valueChange)="methodChange.emit({id: row.id, changes: {port: +$event}})" /></span>
+        <span class="method-trust">
+          @if (row.id === 'https-rest' || row.id === 'api-tls') {
+            <ui-checkbox [checked]="row.acceptSelfSignedCertificates" [disabled]="disabled()" [ariaLabel]="'Accept untrusted certificates for ' + row.label" (checkedChange)="methodChange.emit({id: row.id, changes: {acceptSelfSignedCertificates: $event}})">Accept untrusted certificates</ui-checkbox>
+          }
+        </span>
+
+      </div>
+      @if (probeFor(row.id); as probe) {
+        <p role="status">{{ probe.status }} · port {{ probe.port }} · {{ probe.message }}</p>
+        @if (probe.sshHostKeyFingerprint) { <p class="fingerprint">{{ probe.sshHostKeyFingerprint }}</p> }
+      }
+    </li>
+  }
+</ol>
+
+<span class="visually-hidden" aria-live="polite">{{ announcement() }}</span>

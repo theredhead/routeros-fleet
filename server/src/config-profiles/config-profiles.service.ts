@@ -43,7 +43,7 @@ export class ConfigProfilesService {
     if (!device) throw new NotFoundException('Device not found');
     const cred = await this.creds.findOne({ where: { deviceId } });
     if (!cred) throw new BadRequestException('Device has no stored credential');
-    const c: Creds = { host: device.mgmtIp, username: cred.username, password: this.crypto.decrypt(cred.passwordEncrypted) };
+    const c: Creds = { host: device.mgmtIp, communication: device.communication, username: cred.username, password: this.crypto.decrypt(cred.passwordEncrypted) };
     return this.renderer.readCurrent(c);
   }
 }

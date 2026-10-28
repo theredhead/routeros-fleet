@@ -1,3 +1,7 @@
+import { ConfigurationIntegrityModule } from './configuration-integrity/configuration-integrity.module';
+import { FiltersModule } from './filters/filters.module';
+import { FleetEventsModule } from './events/fleet-events.module';
+import { FormsModule } from './forms/forms.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -7,6 +11,9 @@ import { DevicesModule } from './devices/devices.module';
 import { ConfigProfilesModule } from './config-profiles/config-profiles.module';
 import { JobsModule } from './jobs/jobs.module';
 import { RouterOsModule } from './routeros/routeros.module';
+import { DiscoveryModule } from './discovery/discovery.module';
+import { DevelopmentModule } from './development/development.module';
+import { ProfilesModule } from './profiles/profiles.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -27,12 +34,19 @@ import { HealthController } from './health.controller';
         synchronize: cfg.get('DB_SYNCHRONIZE', 'true') === 'true',
       }),
     }),
+    FleetEventsModule,
     CommonModule,
+    ConfigurationIntegrityModule,
     CustomersModule,
     DevicesModule,
     ConfigProfilesModule,
     JobsModule,
     RouterOsModule,
+    DiscoveryModule,
+    DevelopmentModule,
+    FormsModule,
+    FiltersModule,
+    ProfilesModule,
   ],
 })
 export class AppModule {}

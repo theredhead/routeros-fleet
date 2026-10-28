@@ -1,0 +1,10 @@
+    <ui-dialog [open]="true" ariaLabel="Scan network" (closed)="dismissed.emit()">
+      <ui-dialog-header>Scan network <app-help-popover label="Network scan" text="Leave the address blank for automatic local discovery. Enter a MAC address, IP address, or CIDR to target a device or subnet. The optional subnet helps MAC lookup. Local discovery listens for five seconds; IP scans support /22 to /32." /></ui-dialog-header>
+      <ui-dialog-body>
+        <fieldset class="detail-form" tabindex="-1" (keyup.enter)="submit()"><ui-form [engine]="form" [showSubmit]="false" /></fieldset>
+      </ui-dialog-body>
+      <ui-dialog-footer>
+        <ui-button variant="ghost" (click)="dismissed.emit()">Cancel</ui-button>
+        <ui-button [disabled]="!form.valid()" (click)="submit()">Scan</ui-button>
+      </ui-dialog-footer>
+    </ui-dialog>

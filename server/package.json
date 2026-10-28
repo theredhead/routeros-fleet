@@ -7,7 +7,10 @@
     "build": "nest build",
     "start": "nest start",
     "start:dev": "nest start --watch",
-    "start:prod": "node dist/main.js"
+    "start:prod": "node dist/main.js",
+    "test": "npm run build:test && node --test test/*.test.cjs",
+    "test:integration": "npm run build:test && node --test test/*.integration.cjs",
+    "build:test": "tsc -p tsconfig.test.json"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
@@ -22,12 +25,14 @@
     "pg": "^8.13.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "ssh2": "^1.17.0",
     "typeorm": "^0.3.20"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.0",
+    "@types/ssh2": "^1.15.6",
     "typescript": "^5.7.2"
   }
 }

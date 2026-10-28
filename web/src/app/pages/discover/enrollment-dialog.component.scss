@@ -1,0 +1,13 @@
+// UIDialog has no width input or sizing token. Scope this sizing override to enrollment.
+app-enrollment-dialog > ui-dialog.enrollment-dialog > dialog.dialog {
+  width: 60rem;
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
+}
+
+app-enrollment-dialog {
+  .enrollment-credentials { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: 12px; margin-block: 12px; }
+  .enrollment-credentials > span { display: grid; gap: 6px; min-width: 0; }
+  .enrollment-fingerprint { display: grid; gap: 6px; margin-block: 12px; }
+  .enrollment-fingerprint code { padding-inline-start: 2rem; overflow-wrap: anywhere; }
+}

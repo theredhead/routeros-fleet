@@ -1,0 +1,13 @@
+    <div class="action-group">
+      <ui-button variant="ghost" size="small" [ariaLabel]="'Edit ' + name()" [uiTooltip]="'Edit ' + name()"
+        [disabled]="disabled()" (click)="edit.emit()"><ui-icon [size]="16" [svg]="pencil" /></ui-button>
+      @if (canDelete()) {
+        <ui-button variant="ghost" size="small" color="danger" [ariaLabel]="'Delete ' + name()" [uiTooltip]="'Delete ' + name()"
+          [disabled]="disabled()" (click)="remove.emit()"><ui-icon [size]="16" [svg]="trash" /></ui-button>
+      }
+      @if (canDuplicate()) {
+        <ui-button variant="ghost" size="small" [ariaLabel]="'Duplicate ' + name()" [uiTooltip]="'Duplicate ' + name()"
+          [disabled]="disabled()" (click)="duplicate.emit()"><ui-icon [size]="16" [svg]="copy" /></ui-button>
+      }
+      <ng-content />
+    </div>

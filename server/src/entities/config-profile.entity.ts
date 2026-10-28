@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, UpdateDateColumn, OneToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, UpdateDateColumn, OneToOne, JoinColumn } from 'typeorm';
 import { Device } from './device.entity';
 
 /**
@@ -10,7 +10,9 @@ import { Device } from './device.entity';
 @Entity('config_profiles')
 export class ConfigProfile {
   @PrimaryGeneratedColumn('uuid') id: string;
-  @OneToOne(() => Device, (d) => d.configProfile) device: Device;
+  @OneToOne(() => Device, (d) => d.configProfile, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'deviceId' })
+  device: Device;
   @Column({ unique: true }) deviceId: string;
 
   // --- DHCP domain ---

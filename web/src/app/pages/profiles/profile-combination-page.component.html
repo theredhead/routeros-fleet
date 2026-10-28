@@ -1,0 +1,9 @@
+    <section uiSurface surfaceType="panel">
+      <ui-button variant="text" [disabled]="saving()" (click)="back()">Back to profiles</ui-button>
+      @if (loading()) { <ui-progress mode="indeterminate" ariaLabel="Loading source profiles" /> }
+      @if (error()) { <p role="alert">{{ error() }}</p> }
+      @if (!loading() && !error()) {
+        <app-profile-combiner [profiles]="profiles()" [temporaryProfiles]="workspace.temporaryProfiles()"
+          (saved)="saved($event)" (temporary)="keepTemporary($event)" (busy)="saving.set($event)" />
+      }
+    </section>

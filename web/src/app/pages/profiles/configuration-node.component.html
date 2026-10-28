@@ -1,0 +1,36 @@
+    @if (helpText(); as help) { <app-help-popover [label]="title()" [text]="help" /> }
+    @if (value() === undefined) {
+      <ui-button variant="outlined" (click)="configure()">Configure {{ title() }}</ui-button>
+    } @else {
+      @if (!required()) {
+        <ui-button variant="text" (click)="valueChange.emit(undefined)">Leave {{ title() }} unmanaged</ui-button>
+      }
+      @if (definition().kind === 'object') {
+        <h3>{{ title() }}</h3>
+        @for (field of objectFields(); track field.key) {
+          <section>
+            <app-configuration-node [definition]="field.definition" [title]="field.title" [schemaKey]="childSchemaKey(field.key)"
+              [value]="property(field.key)" [required]="field.required" (valueChange)="setProperty(field.key, $event)" />
+          </section>
+        }
+      } @else if (definition().kind === 'array') {
+        <h3>{{ title() }}</h3>
+        @if (!items().length) { <p>Empty list <app-help-popover label="Empty list" text="Explicitly empty. This clears this list when the configuration is applied." /></p> }
+        @for (item of items(); track $index; let index = $index) {
+          <section>
+            <h4>{{ title() }} · item {{ index + 1 }}</h4>
+            <app-configuration-node [definition]="itemDefinition()" [schemaKey]="schemaKey() + '.item'" [title]="title() + ' item'" [value]="item" [required]="true" (valueChange)="setItem(index, $event)" />
+            <ui-button variant="text" color="danger" (click)="removeItem(index)">Remove item {{ index + 1 }}</ui-button>
+          </section>
+        }
+        <ui-button variant="outlined" (click)="addItem()">Add {{ title() }} item</ui-button>
+      } @else {
+        @if (engine(); as form) { <ui-form [engine]="form" [showSubmit]="false" /> }
+        @if (definition().kind === 'union') {
+          @for (field of objectFields(); track field.key) {
+            <app-configuration-node [definition]="field.definition" [title]="field.title" [schemaKey]="childSchemaKey(field.key)"
+              [value]="property(field.key)" [required]="field.required" (valueChange)="setProperty(field.key, $event)" />
+          }
+        }
+      }
+    }

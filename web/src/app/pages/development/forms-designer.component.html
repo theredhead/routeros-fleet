@@ -1,0 +1,84 @@
+<section class="overview-panel">
+  <header class="overview-toolbar">
+    <h1>
+      Forms designer
+      <app-help-popover
+        label="Forms designer"
+        text="Load an app form, edit its layout and properties, then save it to the database. Saved designs apply when a form next opens. Restore default removes the saved customization. Keep application field IDs, component types, and option values; labels and layout can be changed. Application validation and runtime values remain enforced."
+      />
+    </h1>
+    <ui-dropdown-list
+      ariaLabel="Application form"
+      [options]="options"
+      [(value)]="selectedId"
+    />
+    <ui-button variant="outlined" [disabled]="busy()" (click)="load()">Load</ui-button>
+    <ui-button
+      [disabled]="busy() || !dirty() || !!validation()"
+      (click)="save()"
+    >
+      {{ busy() ? 'Working…' : 'Save' }}
+    </ui-button>
+    <ui-button variant="outlined" [disabled]="busy()" (click)="restore()">
+      Restore default
+    </ui-button>
+  </header>
+  <div class="designer-status action-group">
+    <span>
+      {{ activeLabel() }} ·
+      {{ forms.customized(activeId()) ? 'Customized' : 'Default' }}
+      {{ dirty() ? ' · Unsaved changes' : '' }}
+    </span>
+    <ui-button variant="text" [disabled]="busy()" (click)="mode.set('design')">
+      Design
+    </ui-button>
+    <ui-button variant="text" [disabled]="busy()" (click)="mode.set('preview')">
+      Preview
+    </ui-button>
+    <ui-button variant="text" [disabled]="busy()" (click)="mode.set('json')">
+      JSON
+    </ui-button>
+  </div>
+  @if (notice()) {
+    <p role="status" class="overview-notice">{{ notice() }}</p>
+  }
+  @if (validation()) {
+    <p role="alert" class="overview-notice">{{ validation() }}</p>
+  }
+  @if (error() || forms.loadError()) {
+    <div role="alert">
+      Couldn’t load or save forms.
+      <app-disclosable title="Error details" state="error" [details]="error() || forms.loadError()" />
+    </div>
+  }
+  <fieldset
+    class="designer-workspace"
+    [disabled]="busy()"
+    [attr.inert]="busy() ? '' : null"
+  >
+    @switch (mode()) {
+      @case ('design') {
+        <div class="designer-columns">
+          <ui-field-palette (fieldRequested)="addField($event)" />
+          <ui-designer-canvas
+            [engine]="designer"
+            (addFieldRequest)="targetGroup.set($event)"
+          />
+          <ui-property-inspector [engine]="designer" />
+        </div>
+      }
+      @case ('preview') {
+        <div class="designer-preview">
+          @if (preview(); as form) {
+            <ui-form [engine]="form" [showSubmit]="false" />
+          }
+        </div>
+      }
+      @case ('json') {
+        <div class="designer-preview">
+          <ui-json-view [value]="designer.schema()" ariaLabel="Form schema" />
+        </div>
+      }
+    }
+  </fieldset>
+</section>

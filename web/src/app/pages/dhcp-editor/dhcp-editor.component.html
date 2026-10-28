@@ -1,0 +1,62 @@
+    <div>
+      <h1>DHCP configuration</h1>
+      @if (device(); as d) {
+        <span>{{ d.hostname }} · {{ d.mgmtIp }} · RouterOS {{ d.routerosVersion || '?' }}</span>
+      } @else { <span>loading device…</span> }
+    </div>
+
+    @if (error(); as e) { <div role="alert">{{ e }}</div> }
+    @if (notice()) { <p role="status">{{ notice() }}</p> }
+
+    <div>
+      <!-- Desired state form -->
+      <section uiSurface surfaceType="panel">
+        <h2>Desired state</h2>
+        <fieldset [disabled]="busy()" [attr.inert]="busy() ? '' : null" style="border: 0; padding: 0; margin: 0">
+          <ui-form [engine]="form" [showSubmit]="false" />
+        </fieldset>
+        <div class="action-group">
+          <ui-button (click)="loadCurrent()" [disabled]="busy()">Load from device</ui-button>
+          <ui-button [disabled]="!form.valid() || busy()" (click)="saveProfile()">Save desired state</ui-button>
+        </div>
+      </section>
+
+      <!-- Operations -->
+      <section uiSurface surfaceType="panel">
+        <h2>Apply <app-help-popover label="Apply" text="Dry-run shows the exact RouterOS calls without touching the device. Apply executes them with a connectivity check and automatic rollback on failure." /></h2>
+        <div class="action-group">
+          <ui-button (click)="dryRun()" [disabled]="busy() || !form.valid()">Dry-run</ui-button>
+          <ui-button variant="filled" (click)="apply()" [disabled]="busy() || !form.valid()">Apply to device</ui-button>
+        </div>
+
+        @if (job(); as j) {
+          <div>
+            Job: <b>{{ j.status }}</b> · step {{ j.step || '—' }} @if (j.error) { · {{ j.error }} }
+          </div>
+        }
+
+        @if (plan(); as p) {
+          <h3>Dry-run plan</h3>
+          @for (m of menus; track m) {
+            <div>
+              <div>{{ m }}</div>
+              @if (p[m].ops.length === 0) {
+                <div>no changes</div>
+              } @else {
+                @for (op of p[m].ops; track $index) {
+                  <div>
+                    <b>{{ op.action }}</b>
+                    @if (op.action === 'add') { {{ fmt(op.props) }} }
+                    @if (op.action === 'update') { id={{ op.id }} → {{ fmt(op.props) }} }
+                    @if (op.action === 'remove') { id={{ op.id }} }
+                  </div>
+                }
+              }
+              @if (p[m].removed.length > 0) {
+                <div>{{ p[m].removed.length }} unmanaged record(s) present — pruned only if “prune” is on.</div>
+              }
+            </div>
+          }
+        }
+      </section>
+    </div>

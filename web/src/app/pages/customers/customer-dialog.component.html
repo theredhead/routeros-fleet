@@ -1,0 +1,18 @@
+    <ui-dialog [open]="true" [ariaLabel]="customer() ? 'Customer details' : 'Add customer'" [closeOnEscape]="!saving()"
+      [closeOnBackdropClick]="!saving()" (closed)="cancel()">
+      <ui-dialog-header>{{ customer() ? 'Customer details' : 'Add customer' }}</ui-dialog-header>
+      <ui-dialog-body>
+        <fieldset [disabled]="saving()" class="customer-form" [attr.inert]="saving() ? '' : null">
+          <ui-form [engine]="form" [showSubmit]="false" />
+        </fieldset>
+        @if (error()) {
+          <div role="alert"><p>Couldn’t save the customer. Please try again.</p>
+            <app-disclosable title="Error details" state="error" [details]="error()" />
+          </div>
+        }
+      </ui-dialog-body>
+      <ui-dialog-footer>
+        <ui-button variant="text" [disabled]="saving()" (click)="cancel()">Cancel</ui-button>
+        <ui-button [disabled]="saving() || !form.valid()" (click)="save()">{{ saving() ? 'Saving…' : 'Save' }}</ui-button>
+      </ui-dialog-footer>
+    </ui-dialog>

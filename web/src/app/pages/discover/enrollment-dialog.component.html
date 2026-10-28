@@ -1,0 +1,36 @@
+    <ui-dialog class="enrollment-dialog" [open]="true" ariaLabel="Enroll device" [closeOnEscape]="!saving()"
+      [closeOnBackdropClick]="!saving()" (closed)="dismissed.emit()">
+      <ui-dialog-header>Enroll {{ device().hostname || device().ip }}</ui-dialog-header>
+      <ui-dialog-body>
+        <app-help-popover label="Enrollment" text="Verify the RouterOS login, securely store the credentials, and confirm login using the stored credentials. Enrollment does not create a backup or change router configuration." />
+        <p>{{ device().ip }} · {{ device().mac || 'MAC unavailable' }}</p>
+        @if (communication.draft(); as draft) {
+          <app-disclosable title="Communication methods and connection checks">
+            <app-communication-methods [rows]="draft.rows()" [probes]="communication.probes()" [disabled]="saving() || communication.checking()" (move)="draft.move($event)" (methodChange)="draft.update($event)" />
+            <p>Probes send no credentials. Reachability does not confirm login or configuration permissions. HTTP and plain API are unencrypted. Accepting untrusted TLS certificates skips certificate validation.</p>
+          </app-disclosable>
+        }
+        <ui-button variant="text" [disabled]="saving() || communication.checking()" (click)="communication.draft() ? communication.probe(device().ip) : communication.initialize(device().ip)">{{ communication.checking() ? 'Checking connections…' : 'Check connections' }}</ui-button>
+        @if (communication.error()) { <app-disclosable title="Connection checks unavailable" state="error" [details]="communication.error()" /> }
+        @if (communication.sshEnabled() && !ready()) { <p role="status">For SSH, check the connection and confirm the displayed host-key fingerprint, or deselect SSH in Communication methods.</p> }
+        <div class="enrollment-credentials">
+          <span>Username <ui-input ariaLabel="RouterOS username" [value]="username()" (valueChange)="username.set($event)" [disabled]="saving()" /></span>
+          <span>Password (may be empty) <ui-input type="password" ariaLabel="RouterOS password" [value]="password()" (valueChange)="password.set($event)" [disabled]="saving()" /></span>
+        </div>
+        @if (communication.sshEnabled()) {
+          @if (communication.fingerprint(); as fingerprint) {
+            <div class="enrollment-fingerprint">
+              <ui-checkbox [checked]="trustSshHostKey()" (checkedChange)="trustSshHostKey.set($event)" [disabled]="saving() || communication.checking()" ariaLabel="Trust this SSH host-key fingerprint">
+                Trust this SSH host-key fingerprint
+              </ui-checkbox>
+              <code>{{ fingerprint }}</code>
+            </div>
+          }
+        }
+        @if (error()) { <app-disclosable role="alert" [title]="error()" [items]="details()" [details]="instructions()" [state]="errorSeverity()" /> }
+      </ui-dialog-body>
+      <ui-dialog-footer>
+        <ui-button variant="text" [disabled]="saving()" (click)="dismissed.emit()">Cancel</ui-button>
+        <ui-button [disabled]="saving() || !username().trim() || !ready()" (click)="enroll()">{{ saving() ? 'Verifying login…' : 'Enroll device' }}</ui-button>
+      </ui-dialog-footer>
+    </ui-dialog>

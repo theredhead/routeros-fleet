@@ -1,0 +1,59 @@
+    <section uiSurface surfaceType="panel" class="overview-panel">
+      <header class="overview-toolbar">
+      <h1>Development <app-help-popover label="Development" text="Server diagnostics and utilities for this fleet database." /></h1>
+      <ui-dropdown-list ariaLabel="Diagnostics view" [options]="viewOptions" [value]="view()" (valueChange)="setView($event)" />
+      <app-refresh-button label="Refresh diagnostics" [disabled]="loading() || resetting()" (refresh)="refresh()" />
+      <ui-button variant="ghost" color="secondary" routerLink="/development/forms">Forms designer</ui-button>
+      <app-overview-filter [view]="filterView()" [(value)]="filter" />
+      </header>
+      <div class="overview-content">
+      @if (loading()) { <app-overview-state message="Loading diagnostics…" [loading]="true" /> }
+      @else if (error()) { <app-overview-state message="Couldn’t complete the request." [error]="error()" [retryable]="true" (retry)="refresh()" /> }
+      @else if (diagnostics()) {
+        @if (view() === 'server') {
+        @if (!serverData().getNumberOfItems()) { <app-overview-state message="No diagnostics match this filter." /> } @else {
+        <ui-table-view [datasource]="serverData()" [showBuiltInPaginator]="false" [pageSize]="20">
+          <ui-text-column key="label" headerText="Diagnostic" />
+          <ui-text-column key="value" headerText="Value" />
+        </ui-table-view>
+        }
+        } @else if (view() === 'inventory' && !inventoryData().getNumberOfItems()) {
+          <app-overview-state message="No records match this filter." />
+        } @else if (view() === 'inventory') {
+        <ui-table-view [datasource]="inventoryData()" [showBuiltInPaginator]="false">
+          <ui-text-column key="label" headerText="Records" />
+          <ui-text-column key="count" headerText="Count" />
+        </ui-table-view>
+        } @else if (!interfaceData().getNumberOfItems()) {
+          <app-overview-state message="No network interfaces match this filter." />
+        } @else {
+        <ui-table-view [datasource]="interfaceData()">
+          <ui-text-column key="name" headerText="Interface" />
+          <ui-text-column key="address" headerText="IPv4 address" />
+          <ui-text-column key="subnet" headerText="Subnet" />
+          <ui-text-column key="mac" headerText="MAC address" />
+        </ui-table-view>
+        }
+      }
+      </div>
+      @if (diagnostics(); as info) {
+        <app-disclosable class="overview-tools" title="Reset database" state="warning">
+        <h2>Reset database <app-help-popover label="Reset database" text="Deletes customers, devices, stored credentials, configuration profiles, reusable profiles, jobs, and audit history. Bronze, Silver, and Gold are recreated with no settings. Physical routers are not reset or reconfigured." /></h2>
+        <p>Permanently deletes all fleet data. There is no undo.</p>
+        @if (!info.resetEnabled) { <p>Reset is disabled for this server environment.</p> }
+        @else if (info.activeJobs) { <p>Reset is unavailable while jobs are queued or running.</p> }
+        @else if (!confirming()) {
+          <ui-button color="danger" variant="outlined" [disabled]="loading()" (click)="beginReset()">Reset database…</ui-button>
+        } @else {
+          <p>There is no undo. Type RESET DATABASE to confirm deletion from {{ info.database.name }} on {{ info.database.host }}.</p>
+          <fieldset [disabled]="resetting()" [attr.inert]="resetting() ? '' : null" class="detail-form"><ui-form [engine]="resetForm" [showSubmit]="false" /></fieldset>
+          <div class="action-group">
+          <ui-button color="danger" [disabled]="confirmation() !== 'RESET DATABASE' || resetting() || loading()" (click)="reset()">
+            {{ resetting() ? 'Resetting…' : 'Permanently reset database' }}
+          </ui-button>
+          <ui-button variant="text" [disabled]="resetting()" (click)="cancelReset()">Cancel</ui-button>
+          </div>
+        }
+        </app-disclosable>
+      }
+    </section>

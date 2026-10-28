@@ -1,0 +1,12 @@
+@if (issues().length) {
+  <section aria-label="Configuration issues" aria-live="polite">
+    <h2>Configuration issues ({{ issues().length }})</h2>
+    <ul>
+      @for (issue of issues(); track issue.code) {
+        <li>
+          <app-disclosable [title]="issue.message" [items]="issue.details || []" [details]="issue.instructions" [state]="issue.severity" />
+        </li>
+      }
+    </ul>
+  </section>
+}

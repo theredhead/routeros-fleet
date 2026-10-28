@@ -19,6 +19,6 @@ export class ConfigProfilesController {
   /** Read-only plan of what apply() would do. */
   @Post(':deviceId/dhcp/dry-run') dryRun(@Param('deviceId') id: string) { return this.jobs.dryRun(id); }
 
-  /** Start an apply job (runs in background). Returns the job to poll. */
+  /** Start an apply job (runs in background). Returns the job; status changes are announced over SSE. */
   @Post(':deviceId/dhcp/apply') apply(@Param('deviceId') id: string) { return this.jobs.apply(id); }
 }

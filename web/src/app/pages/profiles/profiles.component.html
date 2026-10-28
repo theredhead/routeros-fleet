@@ -1,0 +1,30 @@
+    <section uiSurface surfaceType="panel" class="overview-panel">
+      <div class="overview-table">
+      <header class="overview-toolbar table-header">
+      <h1>Profiles</h1>
+      <ui-button variant="ghost" color="secondary" routerLink="/profiles/new">Add profile</ui-button>
+      <ui-button variant="ghost" color="secondary" routerLink="/profiles/combine">Combine profiles</ui-button>
+      <app-overview-filter view="profiles" [value]="filter()" (valueChange)="filterChanged($event)" />
+      </header>
+      <div class="overview-content">
+      @if (loading()) { <app-overview-state message="Loading profiles…" [loading]="true" /> }
+      @else if (error()) { <app-overview-state message="Couldn’t complete the request." [error]="error()" [retryable]="true" (retry)="load()" /> }
+      @else if (total() === 0) { <app-overview-state message="No profiles match this filter." /> }
+      @else if (datasource(); as source) {
+        <ui-table-view [datasource]="source" [pageSize]="25" [pageSizeOptions]="[25, 50, 100]">
+          <ui-template-column key="name" headerText="Name">
+            <ng-template let-profile><ui-button variant="ghost" color="secondary" [routerLink]="['/profiles', profile.id, 'edit']">{{ profile.name }}</ui-button></ng-template>
+          </ui-template-column>
+          <ui-text-column key="description" headerText="Description" />
+          <ui-template-column key="actions" headerText="Actions">
+            <ng-template let-profile>
+              <app-object-actions [name]="profile.name" [disabled]="duplicating() || !!removing()"
+                [canDelete]="!profile.builtinKey" [canDuplicate]="true"
+                (edit)="edit(profile)" (remove)="remove(profile)" (duplicate)="duplicate(profile)" />
+            </ng-template>
+          </ui-template-column>
+        </ui-table-view>
+      }
+      </div>
+      </div>
+    </section>

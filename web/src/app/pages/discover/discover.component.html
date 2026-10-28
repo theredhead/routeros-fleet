@@ -1,0 +1,44 @@
+    <section uiSurface surfaceType="panel" class="overview-panel">
+      <div class="overview-table">
+      <header class="overview-toolbar table-header">
+        <h1>Discover devices <app-help-popover label="Discover devices" text="Scan for devices, then enroll them into your fleet. Scanning does not change router configuration." /></h1>
+        <ui-button [disabled]="scanning()" (click)="scanSetup.set(true)">Scan network</ui-button>
+        <app-overview-filter view="discovery" [(value)]="filter" [data]="results()" />
+      </header>
+      @if (inventoryError() && results().length) {
+        <div role="alert">Couldn’t check enrollment status.
+          <app-disclosable title="Error details" state="error" [details]="inventoryError()" />
+          <ui-button variant="ghost" (click)="loadInventory()">Try again</ui-button>
+        </div>
+      }
+      <div class="overview-content">
+      @if (scanning()) { <app-overview-state message="Discovering devices…" [loading]="true" /> }
+      @else if (error()) { <app-overview-state message="Couldn’t discover devices." [error]="error()" [retryable]="true" (retry)="run()" /> }
+      @else if (visible().length) {
+        <ui-table-view [datasource]="datasource()" [pageSize]="25" [pageSizeOptions]="[25, 50, 100]">
+          <ui-text-column key="ip" headerText="IP address" />
+          <ui-text-column key="mac" headerText="MAC address" />
+          <ui-text-column key="hostname" headerText="Identity" />
+          <ui-text-column key="model" headerText="Model" />
+          <ui-template-column key="actions" headerText="Enrollment">
+            <ng-template let-device>
+              @if (isKnown(device)) { <span>Known</span> }
+              @else if (device.isRouterOs) {
+                <ui-button variant="outlined" [disabled]="inventoryLoading() || !!inventoryError()" (click)="selectDevice(device)">Enroll</ui-button>
+              } @else { <span>RouterOS not identified</span> }
+            </ng-template>
+          </ui-template-column>
+        </ui-table-view>
+      } @else if (searched() && !scanning() && !error()) {
+        <app-overview-state [message]="results().length ? 'No devices match this filter.' : 'No devices found. Check the connection and try again.'" />
+      } @else { <app-overview-state message="No devices discovered yet." /> }
+      </div>
+      </div>
+    </section>
+    @if (scanSetup()) {
+      <app-scan-dialog [previous]="lastScan()" (dismissed)="scanSetup.set(false)" (scan)="startScan($event)" />
+    }
+    @if (selected(); as device) {
+      <app-enrollment-dialog [device]="device"
+        (dismissed)="selected.set(null)" (enrolled)="onEnrolled($event)" />
+    }

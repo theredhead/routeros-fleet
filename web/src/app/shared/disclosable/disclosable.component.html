@@ -1,0 +1,16 @@
+<button type="button" class="disclosable-toggle" [id]="titleId"
+  [attr.aria-expanded]="expanded()" [attr.aria-controls]="detailsId"
+  (click)="expanded.set(!expanded())">
+  <ui-icon class="disclosable-icon" [svg]="disclosureIcon" [size]="16" aria-hidden="true" />
+  <span>{{ title() }}</span>
+</button>
+<div class="disclosable-details" [id]="detailsId" [hidden]="!expanded()"
+  role="region" [attr.aria-labelledby]="titleId">
+  @if (items().length) {
+    <ul class="disclosable-items">
+      @for (item of items(); track $index) { <li>{{ item }}</li> }
+    </ul>
+  }
+  @if (details()) { <p class="disclosable-text">{{ details() }}</p> }
+  <ng-content />
+</div>

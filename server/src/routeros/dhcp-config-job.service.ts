@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Device } from '../entities/device.entity';
@@ -25,6 +25,7 @@ function errMsg(e: any): string {
 
 @Injectable()
 export class DhcpConfigJobService {
+  private readonly log = new Logger(DhcpConfigJobService.name);
   constructor(
     @InjectRepository(Device) private devices: Repository<Device>,
     @InjectRepository(DeviceCredential) private creds: Repository<DeviceCredential>,
@@ -40,7 +41,7 @@ export class DhcpConfigJobService {
   private async credsFor(device: Device): Promise<Creds | null> {
     const cred = await this.creds.findOne({ where: { deviceId: device.id } });
     if (!cred) return null;
-    return { host: device.mgmtIp, username: cred.username, password: this.crypto.decrypt(cred.passwordEncrypted) };
+    return { host: device.mgmtIp, communication: device.communication, username: cred.username, password: this.crypto.decrypt(cred.passwordEncrypted) };
   }
 
   private async loadInputs(deviceId: string): Promise<{ device: Device; profile: ConfigProfile }> {
@@ -189,11 +190,11 @@ export class DhcpConfigJobService {
     for (const [name, menu] of MENUS) {
       const c = changes[name];
       // remove anything we added
-      for (const a of c.added) { if (a.id) { try { await this.client.remove(creds, menu, String(a.id)); } catch {} } }
+      for (const a of c.added) { if (a.id) { try { await this.client.remove(creds, menu, String(a.id)); } catch { this.log.warn(`Rollback could not remove added ${menu} record ${a.id} on ${creds.host}; manual verification is required.`); } } }
       // reset anything we updated back to its prior props
-      for (const u of c.updated) { if (u.before) { try { await this.client.set(creds, menu, String(u.id), this.reconcile.writableProps(u.before)); } catch {} } }
+      for (const u of c.updated) { if (u.before) { try { await this.client.set(creds, menu, String(u.id), this.reconcile.writableProps(u.before)); } catch { this.log.warn(`Rollback could not restore ${menu} record ${u.id} on ${creds.host}; manual verification is required.`); } } }
       // re-add anything we removed/pruned
-      for (const r of c.removed) { if (r && r.id !== undefined) { try { await this.client.add(creds, menu, [this.reconcile.writableProps(r)]); } catch {} } }
+      for (const r of c.removed) { if (r && r.id !== undefined) { try { await this.client.add(creds, menu, [this.reconcile.writableProps(r)]); } catch { this.log.warn(`Rollback could not recreate ${menu} record ${r.id} on ${creds.host}; manual verification is required.`); } } }
     }
   }
 }

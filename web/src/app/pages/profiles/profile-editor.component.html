@@ -1,0 +1,36 @@
+    <section uiSurface surfaceType="panel">
+      <ui-button variant="text" [disabled]="saving()" (click)="back()">Back to profiles</ui-button>
+      <h1>{{ selected()?.id === 'new' ? 'Add profile' : selected()?.name || 'Profile' }}</h1>
+      @if (loading()) { <ui-progress mode="indeterminate" ariaLabel="Loading profile" /> }
+      @if (error()) { <p role="alert">{{ error() }}</p> }
+      @if (notice()) { <p role="status">{{ notice() }}</p> }
+      @if (selected(); as profile) {
+        @if (profile.id.startsWith('temp:')) { <p>Temporary profile <app-help-popover label="Temporary profile" text="Kept in browser memory until reload. Save to retain it in the database." /></p> }
+        @if (dirty()) { <p role="status">Unsaved changes</p> }
+        @if (saving()) { <ui-progress mode="indeterminate" ariaLabel="Saving profile" /> }
+        @else {
+          <ui-form [engine]="metadata()" [showSubmit]="false" />
+          <h2>Device configuration <app-help-popover label="Device configuration" text="Configure only settings this profile should contribute. Secret fields accept secure-storage references, not plaintext secrets." /></h2>
+          <ui-dropdown-list ariaLabel="Configuration section" [options]="sectionOptions" [(value)]="sectionKey" />
+          @if (section(); as group) {
+            <h2>{{ group.sectionTitle }} <app-help-popover [label]="group.sectionTitle" [text]="group.sectionContentSummary" /></h2>
+            <app-configuration-node [definition]="group.definition" [title]="group.sectionTitle" [required]="true" [schemaKey]="'setting.' + group.key"
+              [value]="sectionSettings()" (valueChange)="setSection($event)" />
+          }
+        }
+        @if (issues().length) {
+          <p role="alert">Complete these fields before saving:</p>
+          <ul>@for (issue of issues(); track $index) { <li>{{ issue.path }}: {{ issue.message }}</li> }</ul>
+        }
+        <div class="action-group">
+        <ui-button [disabled]="saving() || !metadata().valid() || issues().length > 0 || (!dirty() && !profile.id.startsWith('temp:'))" (click)="save()">Save profile</ui-button>
+        @if (profile.id.startsWith('temp:')) {
+          <ui-button variant="outlined" [disabled]="saving() || !dirty() || !metadata().valid() || issues().length > 0" (click)="updateTemporary()">Keep changes in memory</ui-button>
+        }
+        <ui-button variant="outlined" [disabled]="saving() || !dirty()" (click)="discard()">Discard changes</ui-button>
+        @if (!profile.builtinKey && profile.id !== 'new') {
+          <ui-button color="danger" variant="outlined" [disabled]="saving()" (click)="remove()">{{ profile.id.startsWith('temp:') ? 'Forget temporary profile' : 'Delete profile' }}</ui-button>
+        }
+        </div>
+      }
+    </section>

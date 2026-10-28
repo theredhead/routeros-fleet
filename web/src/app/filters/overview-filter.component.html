@@ -1,0 +1,50 @@
+    <div class="overview-filter-bar">
+      <ui-filter [fields]="fields()" [data]="data()" [allowJunction]="true" [value]="value()"
+        [disabled]="busy()" (expressionChange)="changed($event)" />
+      <div class="action-group overview-filter-tools">
+        @if (value().rules.length) {
+          <ui-button variant="ghost" size="small" ariaLabel="Clear filter" uiTooltip="Clear filter" [disabled]="busy()" (click)="clear()"><ui-icon [size]="16" [svg]="clearIcon" /></ui-button>
+        }
+        <ui-button variant="ghost" size="small" [ariaLabel]="managerLabel()" [uiTooltip]="managerLabel()" [color]="error() ? 'danger' : 'neutral'"
+          [disabled]="busy()" (click)="openManager()"><ui-icon [size]="16" [svg]="bookmark" /></ui-button>
+      </div>
+    </div>
+    @if (managing()) {
+      <ui-dialog [open]="true" ariaLabel="Saved filters" [closeOnEscape]="!busy()" [closeOnBackdropClick]="!busy()" (closed)="closeManager()">
+        <ui-dialog-header>Saved filters</ui-dialog-header>
+        <ui-dialog-body>
+          <div class="saved-filter-manager">
+            <ui-dropdown-list ariaLabel="Saved filters" [options]="options()" [(value)]="selectedId" [disabled]="busy()" />
+            @if (error()) {
+              <div role="alert">Saved filters are unavailable.
+                <app-disclosable title="Error details" state="error" [details]="error()" />
+                <ui-button variant="ghost" size="small" [disabled]="busy()" (click)="reload()">Try again</ui-button>
+              </div>
+            } @else if (!saved().length) { <p>No saved filters yet.</p> }
+            <div class="action-group">
+              <ui-button variant="outlined" [disabled]="busy()" (click)="beginSave()">Save current filter</ui-button>
+              <ui-button variant="ghost" color="danger" ariaLabel="Delete saved filter" uiTooltip="Delete saved filter"
+                [disabled]="busy() || !selectedId()" (click)="remove()"><ui-icon [size]="16" [svg]="trash" /></ui-button>
+            </div>
+          </div>
+        </ui-dialog-body>
+        <ui-dialog-footer>
+          <ui-button variant="ghost" [disabled]="busy()" (click)="closeManager()">Cancel</ui-button>
+          <ui-button [disabled]="busy() || !selectedId()" (click)="load()">Load filter</ui-button>
+        </ui-dialog-footer>
+      </ui-dialog>
+    }
+    @if (naming()) {
+      <ui-dialog [open]="true" ariaLabel="Save filter" [closeOnEscape]="!busy()" [closeOnBackdropClick]="!busy()" (closed)="cancelSave()">
+        <ui-dialog-header>Save filter</ui-dialog-header>
+        <ui-dialog-body>
+          <fieldset class="detail-form" [disabled]="busy()" [attr.inert]="busy() ? '' : null"><ui-form [engine]="nameForm!" [showSubmit]="false" /></fieldset>
+          <p>{{ replacing() ? 'Updates the loaded filter.' : 'Creates a new saved filter.' }}</p>
+          @if (error()) { <div role="alert">Couldn’t save the filter.<app-disclosable title="Error details" state="error" [details]="error()" /></div> }
+        </ui-dialog-body>
+        <ui-dialog-footer>
+          <ui-button variant="ghost" [disabled]="busy()" (click)="cancelSave()">Cancel</ui-button>
+          <ui-button [disabled]="busy() || !nameForm!.valid()" (click)="save()">{{ busy() ? 'Saving…' : 'Save' }}</ui-button>
+        </ui-dialog-footer>
+      </ui-dialog>
+    }

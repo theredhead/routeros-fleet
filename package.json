@@ -1,0 +1,29 @@
+{
+  "name": "routeros-fleet",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@angular-eslint/eslint-plugin": "^21.3.0",
+    "@angular-eslint/eslint-plugin-template": "^21.3.0",
+    "@angular-eslint/template-parser": "^21.3.0",
+    "@eslint/js": "^10.0.1",
+    "angular-eslint": "^21.3.0",
+    "eslint": "^10.0.3",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "typescript-eslint": "^8.57.0"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix --no-error-on-unmatched-pattern"
+    ],
+    "*.html": [
+      "eslint --fix --no-error-on-unmatched-pattern"
+    ]
+  }
+}

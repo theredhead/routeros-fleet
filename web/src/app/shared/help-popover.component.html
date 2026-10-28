@@ -1,0 +1,9 @@
+<button
+  type="button"
+  [attr.aria-label]="'Help: ' + label()"
+  aria-haspopup="dialog"
+  [attr.aria-expanded]="open()"
+  (click)="toggle($event)"
+>
+  ?
+</button>

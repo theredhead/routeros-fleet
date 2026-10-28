@@ -1,0 +1,20 @@
+    <section uiSurface surfaceType="panel" class="overview-panel">
+      <header class="overview-toolbar">
+      <h1>RouterOS Fleet</h1>
+      <app-refresh-button label="Refresh status" [disabled]="loading()" (refresh)="refresh()" />
+      <app-overview-filter view="dashboard" [(value)]="filter" />
+      </header>
+      <app-configuration-issues [issues]="configurationIssues()" />
+      <div class="overview-content">
+      @if (loading()) { <app-overview-state message="Checking server status…" [loading]="true" /> }
+      @else if (error()) { <app-overview-state message="Couldn’t check server status." [error]="error()" [retryable]="true" (retry)="refresh()" /> }
+      @else if (health()) {
+        @if (!datasource().getNumberOfItems()) { <app-overview-state message="No services match this filter." /> } @else {
+        <ui-table-view [datasource]="datasource()" [showBuiltInPaginator]="false">
+          <ui-text-column key="label" headerText="Service" />
+          <ui-text-column key="value" headerText="Status" />
+        </ui-table-view>
+        }
+      }
+      </div>
+    </section>

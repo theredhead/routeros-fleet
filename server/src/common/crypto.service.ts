@@ -10,11 +10,17 @@ export class CryptoService {
   private key(): Buffer {
     const raw = process.env.ENCRYPTION_KEY || '';
     const buf = Buffer.from(raw, 'hex');
-    if (buf.length < 32) {
-      throw new Error('ENCRYPTION_KEY must be at least 64 hex chars (32 bytes). Run: openssl rand -hex 32');
+    if (!/^[0-9a-f]{64}$/i.test(raw) || buf.length !== 32) {
+      throw new Error('Credential encryption is not configured. Set a persistent 64-character hexadecimal ENCRYPTION_KEY on the server.');
     }
     return buf.subarray(0, 32);
   }
+
+  isConfigured(): boolean {
+    try { this.key(); return true; } catch { return false; }
+  }
+
+  assertConfigured(): void { this.key(); }
 
   encrypt(plain: string): string {
     const iv = crypto.randomBytes(12);

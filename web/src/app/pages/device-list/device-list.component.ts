@@ -1,75 +1,69 @@
-import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { NotificationsService } from '../../core/notifications.service';
+import { OverviewFilterComponent } from '../../filters/overview-filter.component';
+import { emptyFilter, filterRows } from '../../filters/overview-filter';
+import type { FilterExpression } from '@theredhead/lucid-kit';
+import { CommonDialogService } from '@theredhead/lucid-blocks';
+import { ObjectActionsComponent } from '../../shared/object-actions.component';
+import { DeviceDialogComponent } from './device-dialog.component';
+import { LiveUpdatesService } from '../../core/live-updates.service';
+import { OverviewStateComponent } from '../../shared/overview-state.component';
+import { HelpPopoverComponent } from '../../shared/help-popover.component';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { ArrayDatasource, UISurface } from '@theredhead/lucid-foundation';
+import { UIButton, UITableView, UITextColumn, UITemplateColumn } from '@theredhead/lucid-kit';
 import { ApiService } from '../../core/api.service';
 import { Customer, Device } from '../../models';
 
 @Component({
   selector: 'app-device-list',
-  imports: [CommonModule, RouterLink],
-  template: `
-    <div class="card">
-      <h1>Devices</h1>
-      <p class="sub">Enrolled RouterOS devices and their managed state. Open a device to edit its DHCP configuration.</p>
-
-      @if (customers().length) {
-        <div class="row" style="margin-bottom:14px">
-          <label style="margin:0">Filter by customer</label>
-          <select #cust style="padding:9px 11px;border:1px solid #d1d5db;border-radius:8px;min-width:220px"
-                  (change)="onCustomerChange(cust.value)">
-            <option value="">All customers</option>
-            @for (c of customers(); track c.id) {
-              <option [value]="c.id">{{ c.name }}</option>
-            }
-          </select>
-        </div>
-      }
-
-      @if (loading()) { <p>Loading…</p> }
-      @else if (devices().length === 0) {
-        <p>No devices yet. Enroll one via the API (<code>POST /api/devices</code>) or from your provisioning flow.</p>
-      }
-      @else {
-        <table>
-          <thead><tr><th>Hostname</th><th>Mgmt IP</th><th>Model</th><th>RouterOS</th><th>Status</th><th></th></tr></thead>
-          <tbody>
-            @for (d of devices(); track d.id) {
-              <tr>
-                <td>{{ d.hostname }}</td>
-                <td>{{ d.mgmtIp }}</td>
-                <td>{{ d.model || '—' }}</td>
-                <td>{{ d.routerosVersion || '—' }}</td>
-                <td><span class="badge" [class.online]="d.status==='online'" [class.offline]="d.status==='offline'" [class.error]="d.status==='error'">{{ d.status }}</span></td>
-                <td><a [routerLink]="['/devices', d.id, 'dhcp']">DHCP config →</a></td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      }
-    </div>
-  `,
+  host: {class: 'overview-page'},
+  imports: [OverviewFilterComponent, ObjectActionsComponent, DeviceDialogComponent, OverviewStateComponent, HelpPopoverComponent, RouterLink, UISurface, UIButton, UITableView, UITextColumn, UITemplateColumn],
+  templateUrl: './device-list.component.html',
 })
-export class DeviceListComponent implements OnInit {
-  customers = signal<Customer[]>([]);
-  devices = signal<Device[]>([]);
-  loading = signal(true);
-
-  constructor(private api: ApiService) {}
-
-  ngOnInit(): void {
-    this.api.listCustomers().subscribe((cs) => this.customers.set(cs), () => {});
-    this.loadDevices();
+export class DeviceListComponent {
+  private readonly notifications = inject(NotificationsService);
+  private readonly dialogs = inject(CommonDialogService);
+  readonly editing = signal<Device | null>(null);
+  readonly removing = signal<string | null>(null);
+  readonly filter = signal<FilterExpression>(emptyFilter());
+  private readonly api = inject(ApiService);
+  readonly customers = signal<Customer[]>([]);
+  readonly devices = signal<Device[]>([]);
+  readonly loading = signal(false);
+  readonly error = signal('');
+  readonly rows = computed(() => this.devices().map(device => ({...device, customerName: device.customer?.name || 'Unassigned'})));
+  readonly visible = computed(() => filterRows(this.rows(), 'devices', this.filter()));
+  readonly datasource = computed(() => new ArrayDatasource(this.visible()));
+  constructor() {
+    inject(LiveUpdatesService).watch(['devices'], () => this.load(), () => this.loading());
+    inject(LiveUpdatesService).watch(['customers'], () => this.loadCustomers());
+    this.api.listCustomers().subscribe({ next: customers => this.customers.set(customers), error: error => this.error.set(error.message) });
+    void this.load();
   }
-
-  loadDevices(customerId?: string): void {
-    this.loading.set(true);
-    this.api.listDevices(customerId).subscribe({
-      next: (ds) => { this.devices.set(ds); this.loading.set(false); },
-      error: () => this.loading.set(false),
-    });
+  private async loadCustomers(): Promise<void> {
+    this.customers.set(await firstValueFrom(this.api.listCustomers()));
   }
-
-  onCustomerChange(value: string): void {
-    this.loadDevices(value || undefined);
+  onSaved(device: Device): void {
+    this.editing.set(null); this.notifications.success(`${device.hostname} saved.`); void this.load();
+  }
+  async remove(device: Device): Promise<void> {
+    if (this.removing()) return;
+    this.removing.set(device.id);
+    try {
+      if (!await this.dialogs.confirm({title: `Delete ${device.hostname}?`, message: 'This forgets the enrolled device, its stored credentials, and desired configuration. The physical router is unchanged.', confirmLabel: 'Delete device', variant: 'danger'})) return;
+      await firstValueFrom(this.api.deleteDevice(device.id));
+      this.notifications.success(`${device.hostname} deleted.`); await this.load();
+    } catch (error: any) {
+      const message = error?.error?.message || error?.message || 'Request failed.';
+      this.notifications.error('Couldn’t delete this device.', message);
+    } finally { this.removing.set(null); }
+  }
+  async load(): Promise<void> {
+    this.loading.set(true); this.error.set('');
+    try { this.devices.set(await firstValueFrom(this.api.listDevices())); }
+    catch (error: any) { this.error.set(error?.error?.message || error.message); }
+    finally { this.loading.set(false); }
   }
 }

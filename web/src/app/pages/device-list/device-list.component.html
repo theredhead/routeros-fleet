@@ -1,0 +1,37 @@
+    <section uiSurface surfaceType="panel" class="overview-panel">
+      <div class="overview-table">
+      <header class="overview-toolbar table-header">
+      <h1>Known devices <app-help-popover label="Known devices" text="Devices enrolled in your fleet." /></h1>
+
+      <ui-button variant="ghost" color="secondary" routerLink="/devices/discover">Add device</ui-button>
+      <app-overview-filter view="devices" [(value)]="filter" [data]="rows()" />
+      </header>
+      <div class="overview-content">
+      @if (loading()) { <app-overview-state message="Loading devices…" [loading]="true" /> }
+      @else if (error()) { <app-overview-state message="Couldn’t load devices." [error]="error()" [retryable]="true" (retry)="load()" /> }
+      @else if (!visible().length) { <app-overview-state [message]="devices().length ? 'No devices match this filter.' : 'No devices yet. Discover a device to get started.'" /> }
+      @else {
+        <ui-table-view [datasource]="datasource()" [pageSize]="25" [pageSizeOptions]="[25, 50, 100]">
+          <ui-template-column key="hostname" headerText="Name" [sortable]="true"><ng-template let-device><ui-button variant="ghost" color="secondary" [routerLink]="['/devices', device.id]">{{ device.hostname }}</ui-button></ng-template></ui-template-column>
+          <ui-text-column key="mgmtIp" headerText="IP address" />
+          <ui-text-column key="macAddress" headerText="MAC address" />
+          <ui-text-column key="model" headerText="Model" />
+          <ui-text-column key="routerosVersion" headerText="RouterOS" />
+          <ui-template-column key="customer" headerText="Customer">
+            <ng-template let-device>{{ device.customer?.name || 'Unassigned' }}</ng-template>
+          </ui-template-column>
+          <ui-text-column key="status" headerText="Status" />
+          <ui-template-column key="actions" headerText="Actions">
+            <ng-template let-device>
+              <app-object-actions [name]="device.hostname" [disabled]="!!removing()"
+                (edit)="editing.set(device)" (remove)="remove(device)" />
+            </ng-template>
+          </ui-template-column>
+        </ui-table-view>
+      }
+      </div>
+      </div>
+    </section>
+    @if (editing(); as device) {
+      <app-device-dialog [device]="device" [customers]="customers()" (dismissed)="editing.set(null)" (saved)="onSaved($event)" />
+    }

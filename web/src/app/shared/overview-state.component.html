@@ -1,0 +1,12 @@
+<div [attr.role]="error() ? 'alert' : 'status'">
+  @if (loading()) {
+    <ui-progress mode="indeterminate" [ariaLabel]="message()" />
+  }
+  <p>{{ message() }}</p>
+  @if (error()) {
+    <app-disclosable title="Error details" state="error" [details]="error()" />
+  }
+  @if (retryable() && !loading()) {
+    <ui-button variant="outlined" (click)="retry.emit()">Try again</ui-button>
+  }
+</div>

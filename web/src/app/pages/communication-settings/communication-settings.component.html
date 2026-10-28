@@ -1,0 +1,15 @@
+<section uiSurface surfaceType="panel">
+  <h1>Communication methods <app-help-popover label="Communication methods" text="Enable the methods available throughout the app and set their default attempt order. Enrollment can reorder or deselect enabled methods and override ports and TLS trust. Probes send no credentials. A successful login does not guarantee permission to back up or configure a router." /></h1>
+  <p>HTTP REST and plain native API send credentials without encryption. Accepting untrusted TLS certificates skips certificate validation, including identity and expiry checks.</p>
+  @if (notice()) { <p role="status">{{ notice() }}</p> }
+  @if (error()) { <app-disclosable title="Communication settings unavailable" state="error" [details]="error()" /> }
+  @if (error() || notice()) { <ui-button variant="text" [disabled]="busy()" (click)="reload()">Reload settings</ui-button> }
+  @if (draft(); as draft) {
+    <app-communication-methods [rows]="draft.rows()" [disabled]="busy()" (move)="draft.move($event)" (methodChange)="draft.update($event)" />
+    @if (!draft.valid()) { <p role="alert">Enable at least one method and use whole-number ports from 1 to 65535.</p> }
+    <div class="action-group">
+      <ui-button [disabled]="busy() || !dirty() || !draft.valid()" (click)="save()">Save</ui-button>
+      <ui-button variant="text" [disabled]="busy() || !dirty()" (click)="cancel()">Cancel</ui-button>
+    </div>
+  } @else { <ui-button [disabled]="busy()" (click)="load()">{{ busy() ? 'Loading…' : 'Try again' }}</ui-button> }
+</section>

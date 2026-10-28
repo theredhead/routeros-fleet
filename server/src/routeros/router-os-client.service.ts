@@ -1,73 +1,36 @@
 import { Injectable } from '@nestjs/common';
-import axios, { AxiosInstance } from 'axios';
-
-export interface Creds {
-  host: string;      // management IP (or hostname) of the device
-  username: string;  // least-privilege per-device REST user
-  password: string;
-}
-
-/**
- * Thin client for the RouterOS JSON-RPC-over-HTTPS "REST API" (RouterOS 7.x).
- * Base path is /rest. Property names use RouterOS hyphenated form (e.g. address-pool).
- * Handles self-signed certs (rejectUnauthorized:false) and idempotent retry w/ backoff.
- */
+import { CommunicationService } from '../communication/communication.service';
+import { RouterCredentials, RouterRecord, TransportSession } from '../communication/transport-strategy';
+import { captureInitialBackup } from '../communication/initial-backup';
+export type Creds = RouterCredentials;
 @Injectable()
 export class RouterOsClientService {
-  private timeoutMs = Number(process.env.ROUTEROS_TIMEOUT_MS || 15000);
-
-  private clientFor(creds: Creds): AxiosInstance {
-    return axios.create({
-      baseURL: `https://${creds.host}/rest`,
-      auth: { username: creds.username, password: creds.password },
-      https: { rejectUnauthorized: false },
-      timeout: this.timeoutMs,
-      headers: { 'Content-Type': 'application/json' },
+  constructor(private readonly communication: CommunicationService) {}
+  private async use<T>(credentials: Creds, operation: (session: TransportSession) => Promise<T>): Promise<T> {
+    const selected = await this.communication.select(credentials);
+    try { return await operation(selected.session); } finally { selected.session.close(); }
+  }
+  async verifyLogin(credentials: Creds) {
+    const selected = await this.communication.select(credentials);
+    try { return {version: String(selected.resource.version).slice(0, 100), model: typeof selected.resource['board-name'] === 'string' ? selected.resource['board-name'].slice(0, 100) : undefined, communication: selected.communication}; }
+    finally { selected.session.close(); }
+  }
+  captureInitialBackup(credentials: Creds): Promise<Buffer> { return this.use(credentials, session => captureInitialBackup(session)); }
+  async list(credentials: Creds, menu: string): Promise<RouterRecord[]> {
+    const rows = await this.use(credentials, session => session.command(`/${menu}/print`));
+    return rows.map(row => ({...row, id: row['.id'] ?? row.id}));
+  }
+  async add(credentials: Creds, menu: string, items: RouterRecord[]): Promise<RouterRecord[]> {
+    return this.use(credentials, async session => {
+      const rows: RouterRecord[] = [];
+      for (const item of items) {
+        const added = await session.command(`/${menu}/add`, item);
+        rows.push(...added.map(row => ({...row, id: row.ret ?? row['.id'] ?? row.id})));
+      }
+      return rows;
     });
   }
-
-  /** GET /rest/<menu> -> array of records (each has an .id). */
-  async list(creds: Creds, menu: string): Promise<any[]> {
-    const r = await this.withRetry(() => this.clientFor(creds).get(menu));
-    return Array.isArray(r.data) ? r.data : [];
-  }
-
-  /** POST /rest/<menu> with an array of objects -> created records (with .id). */
-  async add(creds: Creds, menu: string, items: Record<string, any>[]): Promise<any[]> {
-    const r = await this.withRetry(() => this.clientFor(creds).post(menu, items));
-    return Array.isArray(r.data) ? r.data : [];
-  }
-
-  /** PUT /rest/<menu>/<id> -> full replace of that record. */
-  async set(creds: Creds, menu: string, id: string, props: Record<string, any>): Promise<any> {
-    const r = await this.withRetry(() => this.clientFor(creds).put(`${menu}/${id}`, props));
-    return r.data;
-  }
-
-  /** DELETE /rest/<menu>/<id>. */
-  async remove(creds: Creds, menu: string, id: string): Promise<void> {
-    await this.withRetry(() => this.clientFor(creds).delete(`${menu}/${id}`));
-  }
-
-  /** GET /system/resource — used as a cheap connectivity/health probe. */
-  async systemResource(creds: Creds): Promise<any> {
-    const r = await this.withRetry(() => this.clientFor(creds).get('/system/resource'), 2);
-    return r.data;
-  }
-
-  private async withRetry<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
-    let lastErr: any;
-    for (let i = 0; i <= retries; i++) {
-      try {
-        return await fn();
-      } catch (e) {
-        lastErr = e;
-        if (i < retries) {
-          const delay = Math.min(8000, 300 * Math.pow(2, i));
-          await new Promise((res) => setTimeout(res, delay));
-        }
-      }
-    }
-    throw lastErr;
-  }
+  set(credentials: Creds, menu: string, id: string, properties: RouterRecord) { return this.use(credentials, session => session.command(`/${menu}/set`, {'.id': id, ...properties})); }
+  async remove(credentials: Creds, menu: string, id: string): Promise<void> { await this.use(credentials, session => session.command(`/${menu}/remove`, {'.id': id})); }
+  async systemResource(credentials: Creds): Promise<RouterRecord> { return this.use(credentials, async session => (await session.command('/system/resource/print'))[0]); }
 }

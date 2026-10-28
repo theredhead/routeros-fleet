@@ -1,50 +1,181 @@
-// LucidKit design tokens — sets the --ui-* CSS custom properties that every
-// @theredhead/lucid-kit component (including lucid-forms field controls) consumes.
 @use '@theredhead/lucid-theme/styles' as theme;
-@include theme.theredhead-theme();
+// Shared brand colors for LucidKit and app components using --ui-* tokens.
+@include theme.theredhead-theme(
+  $primary-color: #FF8800,
+  $secondary-color: #027590,
+  $tertiary-color: #6FB2C3
+);
 
-* { box-sizing: border-box; }
-body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color: #1a1a2e; background: #f5f6fa; }
-a { color: #2563eb; text-decoration: none; }
-header.appbar { background: #1a1a2e; color: #fff; padding: 14px 24px; display: flex; align-items: center; gap: 18px; }
-header.appbar .brand { font-weight: 700; font-size: 18px; }
-header.appbar nav a { color: #cbd5e1; margin-right: 16px; }
-main { padding: 24px; max-width: 1100px; margin: 0 auto; }
-.card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
-h1 { font-size: 22px; margin: 0 0 6px; }
-.sub { color: #6b7280; margin: 0 0 18px; font-size: 14px; }
-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid #eef0f3; }
-th { color: #6b7280; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: .04em; }
-.badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #eef2ff; color: #3730a3; }
-.badge.online { background: #dcfce7; color: #166534; }
-.badge.offline, .badge.error { background: #fee2e2; color: #991b1b; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
-@media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
-label { display: block; font-size: 13px; font-weight: 600; margin: 14px 0 5px; color: #374151; }
-input[type=text], input[type=checkbox] { width: 100%; padding: 9px 11px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
-input[type=checkbox]{ width:auto; }
-.row { display: flex; gap: 12px; align-items: center; }
-button { cursor: pointer; border: none; border-radius: 8px; padding: 9px 16px; font-size: 14px; font-weight: 600; }
-button.primary { background: #2563eb; color: #fff; }
-button.ghost { background: #eef2ff; color: #3730a3; }
-button.danger { background: #dc2626; color: #fff; }
-button:disabled { opacity: .5; cursor: not-allowed; }
-.actions { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
-pre { background: #0f172a; color: #e2e8f0; padding: 14px; border-radius: 8px; overflow: auto; font-size: 12.5px; max-height: 360px; }
-.op { padding: 6px 10px; border-radius: 6px; margin: 4px 0; font-size: 13px; font-family: ui-monospace, monospace; }
-.op.add { background: #dcfce7; color: #166534; }
-.op.update { background: #fef9c3; color: #854d0e; }
-.op.remove, .op.prune { background: #fee2e2; color: #991b1b; }
-.hint { font-size: 12px; color: #6b7280; margin-top: 4px; }
-.err { color: #b91c1c; font-size: 13px; margin-top: 10px; white-space: pre-wrap; }
+// App accent contrast override for explicit and system-selected themes.
+html.light-theme,
+html.dark-theme,
+html:not(.light-theme):not(.dark-theme) {
+  --ui-accent-contrast: #ffffff;
+}
 
-/* page + operation helpers */
-.page-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
-.page-head .sub { margin: 0; }
-.banner { padding: 10px 14px; border-radius: 8px; margin-top: 14px; font-size: 13.5px; background: #eef2ff; color: #3730a3; }
-.banner.ok { background: #dcfce7; color: #166534; }
-.banner.err { background: #fee2e2; color: #991b1b; white-space: pre-wrap; }
-.menu-block { margin-top: 14px; }
-.menu-name { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: #374151; margin-bottom: 6px; }
-.op.none { background: #f3f4f6; color: #6b7280; }
+// Root sizing only: LucidKit owns layout, content scrolling, and appearance.
+html, body { height: 100%; margin: 0; overflow: hidden; }
+app-root { display: block; height: 100%; }
+
+// Sidebar-only surface tokens; content surfaces keep the standard light/dark palette.
+ui-navigation-page ui-sidebar-nav {
+  --ui-surface: var(--ui-secondary);
+  --ui-text: #ffffff;
+  color: var(--ui-text);
+}
+
+// Routed overview pages share the remaining navigation viewport.
+ui-navigation-page .content:has(.overview-page) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: .75rem;
+  overflow: hidden;
+}
+.overview-page {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+.overview-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  gap: .75rem;
+  box-sizing: border-box;
+}
+.overview-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  flex-shrink: 0;
+  h1 { margin: 0 auto 0 0; font-size: 1.5rem; }
+  ui-filter { flex-basis: 100%; }
+}
+.overview-notice { margin: 0; }
+.overview-content {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  > ui-table-view { flex: 1; min-width: 0; min-height: 0; height: 100%; }
+  ui-plain-table-body, ui-cdk-virtual-table-body {
+    flex: 1;
+    min-height: 0;
+    --ui-viewport-height: 100%;
+  }
+}
+@media (max-height: 520px) {
+  ui-navigation-page .content:has(.overview-page) { overflow-y: auto; }
+  .overview-content { min-height: 12rem; }
+}
+.overview-tools {
+  flex-shrink: 0;
+  max-height: 45vh;
+  overflow: auto;
+  summary { cursor: pointer; }
+}
+
+// Sidebar components retain LucidKit's own compact navigation spacing.
+.ui-surface-type-panel:not(:where(ui-sidebar-nav, ui-sidebar-nav *)) {
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+// Shared action spacing in both axes, including wrapped rows.
+.action-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+ui-dialog-footer.ui-dialog-footer {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+app-configuration-node,
+app-configuration-node > section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+app-configuration-node ui-button { align-self: flex-start; }
+
+.action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.customer-form,
+.detail-form {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  width: min(26rem, calc(90vw - 3rem));
+  box-sizing: border-box;
+}
+
+// An overview's heading and Add action belong to the table, including empty states.
+.overview-table {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius, .375rem);
+}
+.overview-table > .table-header {
+  padding: 12px;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-surface);
+}
+.overview-table > .overview-notice,
+.overview-table > [role="alert"] { padding: 12px; }
+.overview-table ui-table-view .root {
+  border: 0;
+  border-radius: 0;
+}
+
+app-object-actions .action-group { flex-wrap: nowrap; }
+
+app-overview-filter {
+  display: block;
+  flex-basis: 100%;
+  min-width: 0;
+}
+
+.overview-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  > ui-filter { flex: 1; min-width: 0; }
+}
+.overview-filter-tools { flex-shrink: 0; }
+.saved-filter-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(26rem, calc(90vw - 3rem));
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

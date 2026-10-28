@@ -1,0 +1,48 @@
+    <h1>Combine profiles <app-help-popover label="Combine profiles" text="Each source adds its configured fields. Named entries merge by identity. Unconfigured fields do not override anything. Primitive lists are complete values; an explicitly empty list can override a configured list." /></h1>
+    <h3>Sources</h3>
+    @for (profile of allSources(); track profile.id) {
+      <div><ui-checkbox [checked]="selectedIds().includes(profile.id)" [disabled]="saving()" (checkedChange)="toggle(profile.id, $event)">
+        {{ profile.name }}{{ profile.id.startsWith('temp:') ? ' (temporary)' : '' }}
+      </ui-checkbox></div>
+    }
+    <h3>Source order <app-help-popover label="Source order" text="First locks keeps the earliest configured value. Last wins keeps the latest. User selects requires a choice for every conflicting field." /></h3>
+    <ol class="action-list">
+      @for (profile of orderedSources(); track profile.id; let index = $index) {
+        <li><div class="action-group">{{ profile.name }}
+          <ui-button variant="text" [disabled]="index === 0 || saving()" (click)="move(index, -1)">Move {{ profile.name }} up</ui-button>
+          <ui-button variant="text" [disabled]="index === orderedSources().length - 1 || saving()" (click)="move(index, 1)">Move {{ profile.name }} down</ui-button>
+        </div></li>
+      }
+    </ol>
+    @if (!saving()) { <ui-form [engine]="parameters" [showSubmit]="false" /> }
+    @if (error()) { <p role="alert">{{ error() }}</p> }
+    @if (combination(); as result) {
+      <h3>Conflicts · {{ result.conflicts.length }}</h3>
+      @if (!result.conflicts.length) { <p>No conflicting fields.</p> }
+      @for (conflict of result.conflicts; track conflict.path) {
+        @if (strategy() === 'user-selects') {
+          <app-conflict-choice [conflict]="conflict" (chosen)="choose(conflict.path, $event)" />
+        } @else {
+          <p><strong>{{ conflict.label }}</strong> — {{ winnerName(conflict) }}</p>
+          @for (candidate of conflict.candidates; track candidate.sourceId) {
+            <p>{{ candidate.sourceName }}: <code>{{ format(candidate.value) }}</code></p>
+          }
+        }
+      }
+      @if (result.unresolvedPaths.length) {
+        <p role="status">Resolve {{ result.unresolvedPaths.length }} conflicting field(s) before previewing or saving.</p>
+      } @else {
+        <h3>Combined configuration preview</h3>
+        @if (previewRows().length) {
+          <ui-table-view [datasource]="previewData()" [pageSize]="20">
+            <ui-text-column key="field" headerText="Field" />
+            <ui-text-column key="value" headerText="Value" />
+          </ui-table-view>
+        } @else { <p>No settings are configured in these sources.</p> }
+      }
+      <div class="action-group">
+      <ui-button variant="outlined" [disabled]="saving() || !result.configuration || !parameters.valid()" (click)="keepTemporary()">Keep as temporary profile</ui-button>
+      <ui-button [disabled]="saving() || !result.configuration || !parameters.valid()" (click)="save()">{{ saving() ? 'Saving…' : 'Save combined profile' }}</ui-button>
+      </div>
+    } @else { <p>Select at least two source profiles.</p> }
+    <app-help-popover label="Saving combined profiles" text="Temporary profiles remain available until the browser is reloaded. Saving creates an independent snapshot and leaves every source unchanged." />

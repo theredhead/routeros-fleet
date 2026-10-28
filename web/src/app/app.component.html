@@ -1,0 +1,11 @@
+<ui-navigation-page
+  [items]="items()"
+  rootLabel="RouterOS Fleet"
+  [activePage]="activePage()"
+  (activePageChange)="activePage.set($event)"
+  [sidebarPinned]="true"
+  (navigated)="navigate($event)"
+>
+  <ng-template #content><router-outlet /></ng-template>
+</ui-navigation-page>
+<ui-toast-container position="bottom-right" />

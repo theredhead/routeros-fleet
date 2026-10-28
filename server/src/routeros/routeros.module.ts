@@ -1,3 +1,4 @@
+import { CommunicationModule } from '../communication/communication.module';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Device } from '../entities/device.entity';
@@ -12,7 +13,7 @@ import { AuditService } from './audit.service';
 import { DhcpConfigJobService } from './dhcp-config-job.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Device, DeviceCredential, ConfigProfile, Job, AuditLog])],
+  imports: [CommunicationModule, TypeOrmModule.forFeature([Device, DeviceCredential, ConfigProfile, Job, AuditLog])],
   providers: [RouterOsClientService, ReconcileService, DhcpRendererService, AuditService, DhcpConfigJobService],
   exports: [RouterOsClientService, ReconcileService, DhcpRendererService, AuditService, DhcpConfigJobService],
 })

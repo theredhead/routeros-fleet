@@ -17,7 +17,19 @@
     "importHelpers": true,
     "target": "ES2022",
     "module": "ES2022",
-    "lib": ["ES2022", "dom"]
+    "lib": [
+      "ES2022",
+      "dom"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@fleet/configuration": [
+        "../server/src/configuration/index.ts"
+      ],
+      "@fleet/filters": [
+        "../server/src/filters/filter-definition.ts"
+      ]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false

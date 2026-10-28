@@ -1,0 +1,26 @@
+    <ui-dialog [open]="true" ariaLabel="Device details" [closeOnEscape]="!saving()" [closeOnBackdropClick]="!saving()" (closed)="cancel()">
+      <ui-dialog-header>Device details</ui-dialog-header>
+      <ui-dialog-body>
+        <p>{{ device().status }} · RouterOS {{ device().routerosVersion || 'Unknown' }}</p>
+        @if (device().communication?.selectedStrategy; as strategy) { <p>Last verified communication method: {{ strategy }}</p> }
+        <div class="action-group">
+          <ui-button [disabled]="testingLogin() || saving()" (click)="testLogin()">{{ testingLogin() ? 'Testing login…' : 'Test stored login' }}</ui-button>
+          @if (device().initialBackup; as backup) {
+            <a [href]="'/api/devices/' + device().id + '/initial-backup'" download="initial.backup">Download initial backup ({{ backup.size }} bytes)</a>
+          }
+        </div>
+        <fieldset class="detail-form" [disabled]="saving()" [attr.inert]="saving() ? '' : null">
+          <ui-form [engine]="form" [showSubmit]="false" />
+        </fieldset>
+        @if (error()) {
+          <div role="alert">Couldn’t save this device.
+            <app-disclosable title="Error details" state="error" [details]="error()" />
+          </div>
+        }
+      </ui-dialog-body>
+      <ui-dialog-footer>
+        @if (!saving()) { <ui-button variant="ghost" color="secondary" [routerLink]="['/devices', device().id]">Device JSON details</ui-button><ui-button variant="ghost" color="secondary" [routerLink]="['/devices', device().id, 'dhcp']">DHCP configuration</ui-button> }
+        <ui-button variant="text" [disabled]="saving()" (click)="cancel()">Cancel</ui-button>
+        <ui-button [disabled]="saving() || !form.valid()" (click)="save()">{{ saving() ? 'Saving…' : 'Save' }}</ui-button>
+      </ui-dialog-footer>
+    </ui-dialog>

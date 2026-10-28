@@ -1,0 +1,22 @@
+<section uiSurface surfaceType="panel">
+  <header class="action-group">
+    <h1>{{ stored()?.device?.hostname || 'Device details' }}</h1>
+    <app-help-popover label="Device JSON data" text="Stored enrollment, customer, desired configuration, recent jobs and audit records appear immediately. A separate read-only router snapshot checks common system, interface, addressing, DHCP, firewall, routing and wireless menus using the configured communication methods. Unsupported or restricted menus are marked unavailable. Sensitive fields are redacted. Refresh retrieves a new live snapshot; live database events update stored data only." />
+    <app-refresh-button label="Refresh device data" [disabled]="loadingStored() || loadingLive()" (refresh)="refresh()" />
+    <ui-button variant="ghost" color="secondary" routerLink="/devices/known">Known devices</ui-button>
+    @if (stored()) {
+      <ui-button variant="text" (click)="edit()">Edit device</ui-button>
+      <ui-button variant="ghost" color="secondary" [routerLink]="['/devices', id(), 'dhcp']">DHCP configuration</ui-button>
+    }
+  </header>
+  @if (loadingStored()) { <p role="status">Loading stored device data…</p> }
+  @if (loadingLive()) { <p role="status">Reading router data…</p> }
+  @if (error()) { <app-disclosable title="Stored device data unavailable" state="error" [details]="error()" /><ui-button variant="text" [disabled]="loadingStored()" (click)="loadStored()">Try again</ui-button> }
+  @if (liveError()) { <app-disclosable title="Live router data unavailable" state="warning" [details]="liveError()" /> }
+  @if (stored() || live()) { <ui-json-view [value]="snapshot()" ariaLabel="Device details and live router snapshot" /> }
+</section>
+@if (editing()) {
+  @if (stored(); as details) {
+    <app-device-dialog [device]="details.device" [customers]="customers()" (dismissed)="editing.set(false)" (saved)="onSaved($event)" />
+  }
+}

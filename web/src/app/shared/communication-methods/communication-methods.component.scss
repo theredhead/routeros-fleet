@@ -1,0 +1,38 @@
+:host { display: block; min-width: 0; }
+ol { list-style: none; margin: 0; padding: 0; }
+li { padding-block: 6px; border-bottom: 1px solid var(--ui-border); }
+li:last-child { border-bottom: 0; }
+.method-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.method-name { display: flex; align-items: center; gap: 12px; flex: 1 1 10rem; }
+.method-port { display: flex; align-items: center; gap: 6px; }
+.method-port ui-input { width: 5.5rem; }
+.method-trust { flex: 1 1 12rem; }
+p { margin: 4px 0 0; font-size: .875rem; color: var(--ui-text-muted); }
+.fingerprint { overflow-wrap: anywhere; font-family: var(--ui-font-mono); }
+@media (max-width: 600px) {
+  .method-trust { flex-basis: auto; }
+}
+
+.drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ui-text-muted);
+  cursor: grab;
+  touch-action: none;
+  &:active { cursor: grabbing; }
+  &:disabled { cursor: default; opacity: .5; }
+  &:focus-visible { outline: 2px solid var(--ui-focus-ring); outline-offset: 2px; }
+}
+.cdk-drag-preview { box-sizing: border-box; background: var(--ui-surface); box-shadow: var(--ui-shadow); padding: 6px 12px; }
+.cdk-drag-placeholder { opacity: .3; }
+.cdk-drag-animating { transition: transform 150ms ease; }
+@media (prefers-reduced-motion: reduce) {
+  .cdk-drag-animating { transition: none; }
+}
+
+.reorder-help { display: flex; justify-content: flex-end; }

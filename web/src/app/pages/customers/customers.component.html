@@ -1,0 +1,30 @@
+    <section uiSurface surfaceType="panel" class="overview-panel">
+      <div class="overview-table">
+      <header class="overview-toolbar table-header">
+        <h1>Customers <app-help-popover label="Customers" text="Customers available when enrolling a device." /></h1>
+        <ui-button [disabled]="!!removing()" (click)="adding.set(true)">Add customer</ui-button>
+      <app-overview-filter view="customers" [(value)]="filter" [data]="customers()" />
+      </header>
+      <div class="overview-content">
+        @if (loading()) { <app-overview-state message="Loading customers…" [loading]="true" /> }
+        @else if (error()) { <app-overview-state message="Couldn’t load customers." [error]="error()" [retryable]="true" (retry)="load()" /> }
+        @else if (visible().length) {
+          <ui-table-view [datasource]="datasource()" [pageSize]="25" [pageSizeOptions]="[25, 50, 100]">
+            <ui-text-column key="name" headerText="Name" [sortable]="true" />
+            <ui-text-column key="contactName" headerText="Contact" />
+            <ui-text-column key="contactEmail" headerText="Email" />
+            <ui-template-column key="actions" headerText="Actions">
+              <ng-template let-customer>
+                <app-object-actions [name]="customer.name" [disabled]="!!removing()"
+                  (edit)="editing.set(customer)" (remove)="remove(customer)" />
+              </ng-template>
+            </ui-template-column>
+          </ui-table-view>
+        } @else { <app-overview-state [message]="customers().length ? 'No customers match this filter.' : 'No customers yet. Add your first customer to get started.'" /> }
+      </div>
+      </div>
+    </section>
+    @if (editing(); as customer) {
+      <app-customer-dialog [customer]="customer" (dismissed)="editing.set(null)" (saved)="onSaved($event)" />
+    }
+    @if (adding()) { <app-customer-dialog (dismissed)="adding.set(false)" (saved)="onSaved($event)" /> }
